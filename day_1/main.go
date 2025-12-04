@@ -12,6 +12,10 @@ const minNum = 0
 const maxNum = 99 + 1 // +1 to compensate for 100 being equal to 0
 
 func main() {
+	partOne()
+}
+
+func partOne() {
 	data, err := os.ReadFile("input.txt")
 	if err != nil {
 		panic(err)
@@ -54,5 +58,5 @@ func main() {
 		}
 	}
 
-	fmt.Printf("The solution to day 1 is: %d\n", count)
+	fmt.Printf("The solution to part one of day 1 is: %d\n", count)
 }
