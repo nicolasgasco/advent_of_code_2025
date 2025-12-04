@@ -1,10 +1,18 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+)
+
+type PasswordMode int
+
+const (
+	SimplePassword PasswordMode = iota
+	SecurePassword
 )
 
 const startingNum = 50
@@ -12,21 +20,29 @@ const minNum = 0
 const maxNum = 99 + 1 // +1 to compensate for 100 being equal to 0
 
 func main() {
-	calcPassword(false)
-
-	calcPassword(true)
-}
-
-func calcPassword(isSecurePassword bool) {
-	data, err := os.ReadFile("input.txt")
+	count, err := calculatePassword(SimplePassword)
 	if err != nil {
 		panic(err)
+	}
+	fmt.Printf("Solution for Part 1: %d\n", count)
+
+	count, err = calculatePassword(SecurePassword)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Solution for Part 2: %d\n", count)
+}
+
+func calculatePassword(mode PasswordMode) (uint, error) {
+	data, err := os.ReadFile("input.txt")
+	if err != nil {
+		return 0, err
 	}
 
 	input := string(data)
 	rotations := strings.Split(input, "\n")
 
-	count := 0
+	var count uint = 0
 	currentNum := startingNum
 	for _, rotation := range rotations {
 		valueStr := strings.TrimSpace(rotation[1:])
@@ -35,8 +51,8 @@ func calcPassword(isSecurePassword bool) {
 			panic(err)
 		}
 
-		if isSecurePassword {
-			count += int(value / maxNum)
+		if mode == SecurePassword {
+			count += uint(value / maxNum) // in case there are several full rotations
 		}
 		value = value % maxNum // in case of large rotations
 
@@ -49,10 +65,10 @@ func calcPassword(isSecurePassword bool) {
 		case 'R':
 			rawNewNum += value
 		default:
-			panic("unknown direction")
+			return 0, errors.New("invalid rotation direction")
 		}
 
-		if isSecurePassword {
+		if mode == SecurePassword {
 			wentThroughZero := rawNewNum < minNum || rawNewNum > maxNum
 			isAtZero := currentNum == 0
 			if !isAtZero && wentThroughZero {
@@ -62,7 +78,7 @@ func calcPassword(isSecurePassword bool) {
 		rawNewNum = rawNewNum % maxNum
 
 		if rawNewNum < minNum {
-			currentNum = maxNum + rawNewNum
+			currentNum = maxNum - (-rawNewNum)
 		} else if rawNewNum > minNum {
 			currentNum = rawNewNum % maxNum
 		} else {
@@ -71,9 +87,5 @@ func calcPassword(isSecurePassword bool) {
 		}
 	}
 
-	if isSecurePassword {
-		fmt.Printf("The solution with complex password is: %d\n", count)
-	} else {
-		fmt.Printf("The solution with simple password is: %d\n", count)
-	}
+	return count, nil
 }
