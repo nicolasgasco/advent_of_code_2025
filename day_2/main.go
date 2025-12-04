@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -43,40 +44,54 @@ func calculateInvalidIds(params calculateInvalidIdsParams) int {
 	idRanges := params.idRanges
 	isComplexId := params.isComplexId
 
+	var wg sync.WaitGroup
+	var mutex sync.Mutex
 	sum := 0
 
 	for _, idRange := range idRanges {
-		idRangeChunks := strings.Split(idRange, "-")
-		startId := idRangeChunks[0]
-		endId := idRangeChunks[1]
+		wg.Add(1)
+		go inspectIdRange(idRange, &sum, isComplexId, &wg, &mutex)
+	}
+	wg.Wait()
 
-		startIdInt, err := strconv.Atoi(startId)
-		if err != nil {
-			panic(err)
+	return sum
+}
+
+func inspectIdRange(idRange string, sum *int, isComplexId bool, wg *sync.WaitGroup, mutex *sync.Mutex) int {
+	defer wg.Done()
+
+	idRangeChunks := strings.Split(idRange, "-")
+	startId := idRangeChunks[0]
+	endId := idRangeChunks[1]
+
+	startIdInt, err := strconv.Atoi(startId)
+	if err != nil {
+		panic(err)
+	}
+
+	endIdInt, err := strconv.Atoi(endId)
+	if err != nil {
+		panic(err)
+	}
+
+	for i := startIdInt; i <= endIdInt; i++ {
+		isInvalid := false
+
+		idString := fmt.Sprintf("%d", i)
+		if isComplexId {
+			isInvalid = isInvalidIdPartTwo(idString)
+		} else {
+			isInvalid = isInvalidIdPartOne(idString)
 		}
 
-		endIdInt, err := strconv.Atoi(endId)
-		if err != nil {
-			panic(err)
-		}
-
-		for i := startIdInt; i <= endIdInt; i++ {
-			isInvalid := false
-
-			idString := fmt.Sprintf("%d", i)
-			if isComplexId {
-				isInvalid = isInvalidIdPartTwo(idString)
-			} else {
-				isInvalid = isInvalidIdPartOne(idString)
-			}
-
-			if isInvalid {
-				sum += i
-			}
+		if isInvalid {
+			mutex.Lock()
+			*sum += i
+			mutex.Unlock()
 		}
 	}
 
-	return sum
+	return 0
 }
 
 func isInvalidIdPartOne(id string) bool {
