@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
 const rollRune = '@'
+const removedRune = 'x'
 const maxAdjacentRolls = 4
 
 func main() {
@@ -20,83 +20,125 @@ func main() {
 	}
 
 	input := string(data)
+
 	rows := strings.Split(input, "\n")
+	tempRows := make([]string, len(rows))
+	copy(tempRows, rows)
 
 	accessibleRollsCount := 0
+
 	for y, row := range rows {
-		var wg sync.WaitGroup
-		var mutex sync.Mutex
-
 		for x, roll := range row {
-			if roll != rollRune {
-				continue
+			if roll == rollRune {
+				calculateAccessibleRolls(&accessibleRollsCount, x, y, &rows, &tempRows, len(row))
 			}
-
-			wg.Add(1)
-			go calculateAccessibleRolls(&accessibleRollsCount, x, y, &rows, len(row), &wg, &mutex)
 		}
-
-		wg.Wait()
 	}
 
 	fmt.Printf("Solution to Day 4 - Part 1 is %d\n", accessibleRollsCount)
+
+	rows = strings.Split(input, "\n")
+	tempRows = make([]string, len(rows))
+	copy(tempRows, rows)
+
+	accessibleRollsCount = 0
+
+	for {
+		prevAccessibleRollsCount := accessibleRollsCount
+		for y, row := range rows {
+			for x, roll := range row {
+				if roll == rollRune {
+					calculateAccessibleRolls(&accessibleRollsCount, x, y, &rows, &tempRows, len(row))
+				}
+			}
+		}
+		rows = make([]string, len(tempRows))
+		copy(rows, tempRows)
+
+		if prevAccessibleRollsCount == accessibleRollsCount {
+			break
+		}
+	}
+
+	fmt.Printf("Solution to Day 4 - Part 2 is %d\n", accessibleRollsCount)
+
 	fmt.Printf("Execution Time: %s\n", time.Since(now))
 }
 
-func calculateAccessibleRolls(accessibleRollsCount *int, x int, y int, rows *[]string, rowLen int, wg *sync.WaitGroup, mutex *sync.Mutex) {
-	defer wg.Done()
-
+func calculateAccessibleRolls(accessibleRollsCount *int, x int, y int, rows *[]string, tempRows *[]string, rowLen int) {
 	adjacentRollsCount := 0
 
 	// Above
 	if y > 0 {
 		// Above
-		if (*rows)[y-1][x] == rollRune {
+		aboveTile := (*rows)[y-1][x]
+		if aboveTile == rollRune {
 			adjacentRollsCount++
 		}
 
 		// Above Left
-		if x > 0 && (*rows)[y-1][x-1] == rollRune {
-			adjacentRollsCount++
+		if x > 0 {
+			aboveLeftTile := (*rows)[y-1][x-1]
+			if aboveLeftTile == rollRune {
+				adjacentRollsCount++
+			}
 		}
 
 		// Above right
-		if x < rowLen-1 && (*rows)[y-1][x+1] == rollRune {
-			adjacentRollsCount++
+		if x < rowLen-1 {
+			aboveRightTile := (*rows)[y-1][x+1]
+			if aboveRightTile == rollRune {
+				adjacentRollsCount++
+			}
 		}
 	}
 
 	// Left
-	if x > 0 && (*rows)[y][x-1] == rollRune {
-		adjacentRollsCount++
+	if x > 0 {
+		leftTile := (*rows)[y][x-1]
+		if leftTile == rollRune {
+			adjacentRollsCount++
+		}
 	}
 
 	// Right
-	if x < rowLen-1 && (*rows)[y][x+1] == rollRune {
-		adjacentRollsCount++
+	if x < rowLen-1 {
+		rightTile := (*rows)[y][x+1]
+		if rightTile == rollRune {
+			adjacentRollsCount++
+		}
 	}
 
 	// Below
 	if y < len(*rows)-1 {
 		// Below
-		if (*rows)[y+1][x] == rollRune {
+		belowTile := (*rows)[y+1][x]
+		if belowTile == rollRune {
 			adjacentRollsCount++
 		}
 
 		// Below Left
-		if x > 0 && (*rows)[y+1][x-1] == rollRune {
-			adjacentRollsCount++
+		if x > 0 {
+			belowLeftTile := (*rows)[y+1][x-1]
+			if belowLeftTile == rollRune {
+				adjacentRollsCount++
+			}
 		}
 
 		// Below right
-		if x < rowLen-1 && (*rows)[y+1][x+1] == rollRune {
-			adjacentRollsCount++
+		if x < rowLen-1 {
+			belowRightTile := (*rows)[y+1][x+1]
+			if belowRightTile == rollRune {
+				adjacentRollsCount++
+			}
 		}
 	}
 
 	if adjacentRollsCount < maxAdjacentRolls {
-		mutex.Lock()
+		rowRunes := []rune((*tempRows)[y])
+		rowRunes[x] = removedRune
+		(*tempRows)[y] = string(rowRunes)
+
 		*accessibleRollsCount++
-		mutex.Unlock()
 	}
 }
