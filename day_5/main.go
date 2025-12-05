@@ -20,8 +20,9 @@ func main() {
 	ids := strings.Split(databaseSections[1], "\n")
 
 	freshIngredientsCount := 0
+
 	for _, id := range ids {
-		isFresh := false
+		idValue, _ := strconv.Atoi(id)
 
 		for _, r := range ranges {
 			rangeValues := strings.Split(r, "-")
@@ -29,16 +30,10 @@ func main() {
 			start, _ := strconv.Atoi(rangeValues[0])
 			end, _ := strconv.Atoi(rangeValues[1])
 
-			idValue, _ := strconv.Atoi(id)
-
 			if idValue >= start && idValue <= end {
-				isFresh = true
+				freshIngredientsCount++
 				break
 			}
-		}
-
-		if isFresh {
-			freshIngredientsCount++
 		}
 	}
 
