@@ -2,4 +2,4 @@
 
 My go at the [Advent of Code 2025](https://adventofcode.com), in Go.
 
-<img width="600" alt="Screenshot 2025-12-06 at 00 13 47" src="https://github.com/user-attachments/assets/6aa4a1ef-5c87-4793-b5e1-f34cfaa5a1d3" />
+<img width="600" alt="Screenshot 2025-12-06 at 10 06 56" src="https://github.com/user-attachments/assets/946fda96-26c4-470c-af04-92b2f00a6a86" />
