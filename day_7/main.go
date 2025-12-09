@@ -32,7 +32,6 @@ func main() {
 					rowRunes[x-1] = beamChar
 					rowRunes[x+1] = beamChar
 					manifoldRows[y] = string(rowRunes)
-
 					splitCounter++
 				}
 			} else {
@@ -46,5 +45,18 @@ func main() {
 	}
 
 	fmt.Printf("Solution to Day 7 - Part 1 is %d\n", splitCounter)
+
+	scenariosCounter := 0
+
+	for _, row := range manifoldRows {
+		if strings.Contains(row, string(splitChar)) {
+			for _, char := range row {
+				if char == beamChar {
+					scenariosCounter++
+				}
+			}
+		}
+	}
+	fmt.Printf("Solution to Day 7 - Part 2 is %d\n", scenariosCounter)
 
 }
