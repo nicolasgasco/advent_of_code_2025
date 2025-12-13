@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -58,39 +58,42 @@ func calculateComplexJoltage(banks *[]string) {
 			continue
 		}
 
-		numBatteriesToRemove := len(bank) - bankJoltageBatteries
-
 		var batteries = []rune(bank)
-		fmt.Printf("Bank before removal: %c\n", batteries)
+		var bankJoltage = make([]rune, 0)
 
-		sortedBatteries := make([]rune, len(batteries))
-		copy(sortedBatteries, batteries)
-		sort.Slice(sortedBatteries, func(i, j int) bool {
-			return sortedBatteries[j] > sortedBatteries[i]
-		})
-
-		batteriesToRemove := sortedBatteries[:numBatteriesToRemove]
-
-		fmt.Printf("Removing batteries: %c\n", batteriesToRemove)
-
-		var bankJoltage = []rune{}
-		batteriesToRemoveIndex := 0
-		hasRemovedAllBatteries := false
-		for _, battery := range batteries {
-			if battery == batteriesToRemove[batteriesToRemoveIndex] && !hasRemovedAllBatteries {
-				if batteriesToRemoveIndex < len(batteriesToRemove)-1 {
-					batteriesToRemoveIndex++
-				} else {
-					hasRemovedAllBatteries = true
+		numBatteriesToRemove := len(batteries) - bankJoltageBatteries
+		loopStart := 0
+		for {
+			highestBattery := '0'
+			removedBatteries := 0
+			for i := 0; i < numBatteriesToRemove+1; i++ {
+				if (i + loopStart) > len(batteries)-1 {
+					break
 				}
-			} else {
-				bankJoltage = append(bankJoltage, battery)
+
+				if batteries[i+loopStart] > highestBattery {
+					highestBattery = batteries[i+loopStart]
+					removedBatteries = i
+				}
 			}
+
+			loopStart += removedBatteries + 1
+			bankJoltage = append(bankJoltage, highestBattery)
+			numBatteriesToRemove -= removedBatteries
+
+			if numBatteriesToRemove <= 0 || len(bankJoltage) == bankJoltageBatteries {
+				break
+			}
+
 		}
 
-		fmt.Printf("Final bank: %c\n", bankJoltage)
+		missingBatteries := bankJoltageBatteries - len(bankJoltage)
+		bankJoltage = append(bankJoltage, batteries[len(batteries)-missingBatteries:]...)
+
+		bankJoltageString := string(bankJoltage)
+		bankJoltageValue, _ := strconv.Atoi(bankJoltageString)
+		joltage += bankJoltageValue
 	}
 
-	fmt.Println("Result of Day 3 - Part 1 is", joltage)
-
+	fmt.Println("Result of Day 3 - Part 2 is", joltage)
 }
